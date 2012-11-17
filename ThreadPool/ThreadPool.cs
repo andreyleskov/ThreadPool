@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,10 +15,33 @@ namespace ThreadPoolExample
 public class ThreadPool
 {
 		private int _threadNum;
-		private volatile bool _isStoped;
-		private Task GetTask()
+		private volatile bool _isRunning = true;
+	    private readonly Dictionary<Priority, Queue<Task>> _pendingTasks= new Dictionary<Priority, Queue<Task>>();
+	    private const int HightToNormalPriorityBound = 3;
+	    private int _priorityTasksRemains = HightToNormalPriorityBound;
+
+		private Task GetNextTask()
 		{
-			return null;
+			lock(_pendingTasks)
+			//{
+			//	if (_priorityTasksRemains <= 0 && _pendingTasks[Priority.High].Count > 0)
+			//	{
+			//		if (_pendingTasks[Priority.Normal].Any()) _priorityTasksRemains--;
+
+			//		return _pendingTasks[Priority.High].Dequeue();
+			//	}
+
+				if (_pendingTasks[Priority.High].Count > 0)
+					return _pendingTasks[Priority.High].Dequeue();
+
+				if (_pendingTasks[Priority.Normal].Count > 0)
+					return _pendingTasks[Priority.Normal].Dequeue();
+
+				return _pendingTasks[Priority.Low].Count > 0 ? 
+						  _pendingTasks[Priority.Low].Dequeue() : null;
+
+			   
+		
 		}
 		 
 		//* В конструктор этого класса должно передаваться количество потоков, которые будут выполнять задачи.
@@ -25,15 +49,30 @@ public class ThreadPool
 		public ThreadPool(int threadNum)
 		{
 			_threadNum = threadNum;
+			foreach (Priority priority in Enum.GetValues(typeof(Priority)))
+				_pendingTasks[priority] = new Queue<Task>();
 		}
+
+		private void Run()
+		{
+			Task task = GetNextTask();
+			task.Execute();
+		}
+
 		public bool Execute(Task task,Priority priority)
 		{
-			return true;
+			if(_isRunning)
+			{
+			   _pendingTasks[priority].Enqueue(task);
+				Run();
+			}
+			return _isRunning;
 		}
+
 		//* Метод stop() ожидает завершения всех текущих задач (не очищая очередь).
 		public void Stop()
 		{
-			_isStoped = true;
+			_isRunning = false;
 		}
 }
 }

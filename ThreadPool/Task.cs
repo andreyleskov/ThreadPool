@@ -9,7 +9,7 @@ namespace ThreadPoolExample
 	//* Интерфейс Task должен содержать один метод: void execute(), который вызывается в произвольном потоке.
 	public class Task
 	{
-		void Execute()
+		public void Execute()
 		{
 			_payload.Invoke();
 		}
