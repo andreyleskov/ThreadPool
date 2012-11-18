@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ThreadPoolExample;
@@ -10,26 +11,19 @@ namespace ThreadPoolTests
 	public class ThreadPoolUnitTests
 	{
 		
-		public void TasksConsistencyTest(int threadCount ,Func<int> taskCountProvider, Func<TimeSpan> taskLengthProvider)
+		public void TasksConsistencyTest(int threadCount,int taskCount,Func<Action> taskPayloadProvider)
 		{
 			var pool = new ThreadPoolExample.ThreadPool(threadCount);
 			var random = new Random();
-			int taskCount = taskCountProvider();// random.Next(5, 10);
 			int completedTasksCount = 0;
-
 
 			for (int i = 0; i < taskCount;i++)
 			{
-				var task = new Task(() =>
-					                    {
-											Thread.Sleep(taskLengthProvider());
-											lock (this)
-											{
-												completedTasksCount++;
-											}
-					             					                  
-									});
-				pool.Execute(task, (Priority) random.Next(0, 2));
+				pool.Execute(new Task(()=>{
+						                      completedTasksCount++;
+						                      taskPayloadProvider.Invoke().Invoke();
+					                      }),
+						     (Priority) random.Next(0, 2));
 			}
 
 			pool.Stop();
@@ -37,43 +31,60 @@ namespace ThreadPoolTests
 			Assert.AreEqual(taskCount,completedTasksCount);
 		}
 		private Random _random =new Random();
-		
+
+
+		private long Measure(Action act)
+		{
+			var stopWatch = new Stopwatch();
+			stopWatch.Start();
+			act.Invoke();
+			stopWatch.Stop();
+			return stopWatch.ElapsedMilliseconds;
+		}
+
 		[TestMethod]
 		public void TestManyShortTasks()
 		{
 			TasksConsistencyTest(20,
-								 ()=>_random.Next(1000,5000),
-								 ()=>TimeSpan.FromMilliseconds(_random.Next(0,10)));
+								 _random.Next(1000,5000),
+								 ()=> 
+									 ()=>Thread.Sleep(TimeSpan.FromMilliseconds(_random.Next(0,10)))
+								);
 		}
 
 		[TestMethod]
 		public void TestFewLongTasks()
 		{
 			TasksConsistencyTest(3,
-								 () => _random.Next(10, 20),
-								 () => TimeSpan.FromMilliseconds(_random.Next(300, 1000)));
+								 _random.Next(10, 20),
+								 () => 
+									  () =>Thread.Sleep(TimeSpan.FromMilliseconds(_random.Next(300, 1000)))
+								);
 		}
 
-		//[TestMethod]
-		//public void TasksPriorityTest()
-		//{
-		//	var pool = new ThreadPool(2);
-		//	var random = new Random();
-		//	int taskCount = random.Next(1000);
-		//	var priorityChecker = new PrioritySequenceChecker();
+		[TestMethod]
+		public void TasksPriorityTest()
+		{
+			var pool = new ThreadPoolExample.ThreadPool(2);
+			var random = new Random();
+			var priorityChecker = new PrioritySequenceChecker();
 
-		//	for (int i = 0; i < taskCount; i++)
-		//	{
-		//		var priority = (Priority) random.Next(0, 2);
-		//		priorityChecker.BuildSequence(priority);
+			for (int i = 0; i < 100; i++)
+			{
+				var priority = (Priority)random.Next(0, 2);
+				priorityChecker.BuildSequence(priority);
 
-		//		var task = new Task(() => Assert.AreEqual(true,priorityChecker.CheckSequence(priority)));
+				var task = new Task(() =>
+					                    {
+											Thread.Sleep(random.Next(10,20));
+						                    Assert.AreEqual(true, priorityChecker.CheckSequence(priority));
+					                    });
 
-		//		pool.Execute(task, priority);
-		//	}
+				pool.Execute(task, priority);
+			}
 
-		//	pool.Stop();
-		//}
+			pool.Stop();
+		}
 
 		class PrioritySequenceChecker
 		{
