@@ -6,9 +6,9 @@ namespace ThreadPool
 {
 	class ThreadWorker
 	{
-		public EventWaitHandle WaitHandler = new AutoResetEvent(false);
+		private readonly EventWaitHandle _waitHandler = new AutoResetEvent(false);
 		private readonly object _locker = new object();
-		private readonly Action _taskCompletedCallback;
+		//private readonly Action _taskCompletedCallback;
 		private bool _isBusy;
 		public bool IsBusy 
 		{
@@ -23,14 +23,32 @@ namespace ThreadPool
 		}
 		
 		private readonly Func<Task> _taskProvider;
+		private Thread _runThread;
 
+		private bool _isStopped;
+		public void Stop()
+		{
+			_isStopped = true;
+			Continue();
+			_runThread.Join();
+		}
 
-		public ThreadWorker(Func<Task> taskProvider,Action taskCompletedCallback)
+		public void Pause()
+		{
+			_waitHandler.WaitOne();
+		}
+
+		public void Continue()
+		{
+			_waitHandler.Set();
+		}
+
+		public ThreadWorker(Func<Task> taskProvider)
 		{
 			if(taskProvider == null) throw new ArgumentException("TaskProvider");
-			if (taskCompletedCallback == null) throw new ArgumentException("TaskCompletedCallback");
+			//if (taskCompletedCallback == null) throw new ArgumentException("TaskCompletedCallback");
 
-			_taskCompletedCallback = taskCompletedCallback;
+			//_taskCompletedCallback = taskCompletedCallback;
 			_taskProvider = taskProvider;
 		}
 
@@ -41,10 +59,11 @@ namespace ThreadPool
 
 		public void Run()
 		{
+			_runThread = Thread.CurrentThread;
 			ResetThreadState();
-			while (true)
+			while (!_isStopped)
 			{
-				WaitHandler.WaitOne();
+				Pause();
 				IsBusy = true;
 				Task task = _taskProvider.Invoke();
 				if (task == null)
@@ -61,7 +80,7 @@ namespace ThreadPool
 				{
 					ResetThreadState();
 					IsBusy = false;
-					_taskCompletedCallback();
+					//_taskCompletedCallback();
 				}
 			}
 		}

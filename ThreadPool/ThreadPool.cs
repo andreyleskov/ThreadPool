@@ -59,16 +59,19 @@ public class ThreadPool
 			foreach (Priority priority in Enum.GetValues(typeof(Priority)))
 				_pendingTasks[priority] = new Queue<Task>();
 
-			_dispatcher = new ThreadPoolDispatcher(IsAnyTasksLeft,GetFreeWorker);
+			_dispatcher = new ThreadPoolDispatcher(IsPendingTasksLeft,BusyWorkers,GetFreeWorker);
 			_dispatcherThread = new Thread(_dispatcher.CallWorkers) {Name ="Dispatcher thread", IsBackground = true};
 			_dispatcherThread.Start();
 		}
 
-		private void TaskDone(){}
-
-		private bool IsAnyTasksLeft()
+		private bool IsPendingTasksLeft()
 		{
 			return _pendingTasks.Any(pair => pair.Value.Count > 0);
+		}
+
+		private ThreadWorker[] BusyWorkers()
+		{
+			return _threadWorkerList.Where(w => w.IsBusy).ToArray();
 		}
 
 		private ThreadWorker GetFreeWorker()
@@ -85,7 +88,7 @@ public class ThreadPool
 
 		private ThreadWorker InitNewWorkingThread()
 		{
-			var worker = new ThreadWorker(GetNextTask, TaskDone);
+			var worker = new ThreadWorker(GetNextTask);
 			var thread = new Thread(worker.Run) {Name = "Pool thread #" + ++_threadCounter, IsBackground = true };
 			thread.Start();
 			return worker;
@@ -95,12 +98,11 @@ public class ThreadPool
 		{
 			if(_isRunning)
 			{
-				bool needResumeDispatcher = !IsAnyTasksLeft();
+				bool needResumeDispatcher = !IsPendingTasksLeft();
 				_pendingTasks[priority].Enqueue(task);
 
 				if (needResumeDispatcher)
 					_dispatcher.WaitHandler.Set();
-
 			}
 			
 			return _isRunning;

@@ -23,7 +23,7 @@ namespace ThreadPoolTests
 			{
 				var task = new Task(() =>
 					                    {
-											Thread.Sleep(random.Next(1000));
+											Thread.Sleep(random.Next(100,1000));
 											lock (this)
 											{
 												completedTasksCount++;

@@ -9,27 +9,31 @@ namespace ThreadPool
 {
 	class ThreadPoolDispatcher
 	{
-		private readonly Func<bool> _isAnyTasksLeft;
+		private readonly Func<bool> _isPendingTasksLeft;
 
-		public EventWaitHandle WaitHandler = new AutoResetEvent(false);
-		//private readonly ICollection<ThreadWorker> _threadWorkerList;
+		public readonly EventWaitHandle WaitHandler = new AutoResetEvent(false);
+		private readonly EventWaitHandle _stopWaitHandler = new AutoResetEvent(false);
 		private readonly Func<ThreadWorker> _workerProvider;
 		private bool _closing = false;
-
 		
+		private readonly Func<ThreadWorker[]> _busyWorkers;
+
+
 		public void WaitAll()
 		{
 			_closing = true;
-			WaitHandler.WaitOne();
+			_stopWaitHandler.WaitOne();
 		}
 
-		public ThreadPoolDispatcher(Func<bool> isAnyTasksLeft,Func<ThreadWorker> workerProvider)
+		public ThreadPoolDispatcher(Func<bool> isPendingTasksLeft, Func<ThreadWorker[]> busyWorkers, Func<ThreadWorker> workerProvider)
 		{
 			//_threadWorkerList = threadWorkerList;
-			if(isAnyTasksLeft == null) throw new ArgumentException("isAnyTasksLeft");
+			if(isPendingTasksLeft == null) throw new ArgumentException("isPendingTasksLeft");
+			if (busyWorkers == null) throw new ArgumentException("busyWorkers");
 			if (workerProvider == null) throw new ArgumentException("workerProvider");
-			_isAnyTasksLeft = isAnyTasksLeft;
+			_isPendingTasksLeft = isPendingTasksLeft;
 			_workerProvider = workerProvider;
+			_busyWorkers = busyWorkers;
 		}
 
 		public void CallWorkers()
@@ -37,22 +41,32 @@ namespace ThreadPool
 			//dont use task completed callbacks due to assumption that threadpool performs many short tasks 
 			while (true)
 			{
-				if (!_isAnyTasksLeft.Invoke())
+				if (!_isPendingTasksLeft.Invoke())
 				{
 					if (_closing)
 					{
-						WaitHandler.Set();
+						WaitAllWorkersStopped();
+						_stopWaitHandler.Set();
 						break;
+
 					}
-					
 					WaitHandler.WaitOne();
 				}
 
 				ThreadWorker worker = _workerProvider.Invoke();
 				if (worker != null)
 					//resume worker 
-					worker.WaitHandler.Set();
+					worker.Continue();
 			}
+		}
+
+		public void WaitAllWorkersStopped()
+		{
+			ThreadWorker[] activeWorkers = _busyWorkers.Invoke();
+			if (activeWorkers == null || activeWorkers.Length == 0) return;
+
+			foreach(ThreadWorker worker in activeWorkers)
+				worker.Stop();
 		}
 	}
 }
