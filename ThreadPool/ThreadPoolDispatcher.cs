@@ -14,6 +14,14 @@ namespace ThreadPool
 		public EventWaitHandle WaitHandler = new AutoResetEvent(false);
 		//private readonly ICollection<ThreadWorker> _threadWorkerList;
 		private readonly Func<ThreadWorker> _workerProvider;
+		private bool _closing = false;
+
+		
+		public void WaitAll()
+		{
+			_closing = true;
+			WaitHandler.WaitOne();
+		}
 
 		public ThreadPoolDispatcher(Func<bool> isAnyTasksLeft,Func<ThreadWorker> workerProvider)
 		{
@@ -30,7 +38,15 @@ namespace ThreadPool
 			while (true)
 			{
 				if (!_isAnyTasksLeft.Invoke())
+				{
+					if (_closing)
+					{
+						WaitHandler.Set();
+						break;
+					}
+					
 					WaitHandler.WaitOne();
+				}
 
 				ThreadWorker worker = _workerProvider.Invoke();
 				if (worker != null)

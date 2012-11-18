@@ -20,14 +20,15 @@ namespace ThreadPool
 					_isBusy = value;
 				}
 			}
-		}							  
-
+		}
+		
 		private readonly Func<Task> _taskProvider;
+
 
 		public ThreadWorker(Func<Task> taskProvider,Action taskCompletedCallback)
 		{
 			if(taskProvider == null) throw new ArgumentException("TaskProvider");
-			if (_taskCompletedCallback == null) throw new ArgumentException("TaskCompletedCallback");
+			if (taskCompletedCallback == null) throw new ArgumentException("TaskCompletedCallback");
 
 			_taskCompletedCallback = taskCompletedCallback;
 			_taskProvider = taskProvider;

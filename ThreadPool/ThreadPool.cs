@@ -23,9 +23,10 @@ public class ThreadPool
 	    private int _priorityTasksRemains = HightToNormalPriorityBound;
 		private readonly Thread _dispatcherThread;
 		private readonly List<ThreadWorker> _threadWorkerList = new List<ThreadWorker>();
-		private readonly TimeSpan _waitTimeOut = TimeSpan.FromSeconds(1);
-		private object _locker = new object();
+		//private readonly TimeSpan _waitTimeOut = TimeSpan.FromSeconds(1);
+		//private object _locker = new object();
 		private readonly ThreadPoolDispatcher _dispatcher;
+		private int _threadCounter;
 
 
 		//need to span foreground threads to perfom finally blocks
@@ -59,7 +60,7 @@ public class ThreadPool
 				_pendingTasks[priority] = new Queue<Task>();
 
 			_dispatcher = new ThreadPoolDispatcher(IsAnyTasksLeft,GetFreeWorker);
-			_dispatcherThread = new Thread(_dispatcher.CallWorkers) {IsBackground = true};
+			_dispatcherThread = new Thread(_dispatcher.CallWorkers) {Name ="Dispatcher thread", IsBackground = true};
 			_dispatcherThread.Start();
 		}
 
@@ -67,7 +68,7 @@ public class ThreadPool
 
 		private bool IsAnyTasksLeft()
 		{
-			return _pendingTasks.Any(pair => pair.Value.Any());
+			return _pendingTasks.Any(pair => pair.Value.Count > 0);
 		}
 
 		private ThreadWorker GetFreeWorker()
@@ -85,7 +86,7 @@ public class ThreadPool
 		private ThreadWorker InitNewWorkingThread()
 		{
 			var worker = new ThreadWorker(GetNextTask, TaskDone);
-			var thread = new Thread(worker.Run) { IsBackground = true };
+			var thread = new Thread(worker.Run) {Name = "Pool thread #" + ++_threadCounter, IsBackground = true };
 			thread.Start();
 			return worker;
 		}
@@ -94,8 +95,12 @@ public class ThreadPool
 		{
 			if(_isRunning)
 			{
-				_dispatcher.WaitHandler.Set();
-				_pendingTasks[priority].Enqueue(task);				
+				bool needResumeDispatcher = !IsAnyTasksLeft();
+				_pendingTasks[priority].Enqueue(task);
+
+				if (needResumeDispatcher)
+					_dispatcher.WaitHandler.Set();
+
 			}
 			
 			return _isRunning;
@@ -105,7 +110,7 @@ public class ThreadPool
 		public void Stop()
 		{
 			_isRunning = false;
-			_dispatcherThread.Join(_waitTimeOut);
+			_dispatcher.WaitAll();
 		}
 }
 }

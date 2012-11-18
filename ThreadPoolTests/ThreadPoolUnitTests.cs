@@ -9,26 +9,31 @@ namespace ThreadPoolTests
 	[TestClass]
 	public class ThreadPoolUnitTests
 	{
+
 		[TestMethod]
 		public void TasksConsistencyTest()
 		{
-			int completedTasksCount = 0;
 			var pool = new ThreadPoolExample.ThreadPool(2);
 			var random = new Random();
-			int taskCount = random.Next(10);
+			int taskCount = random.Next(5,10);
+			int completedTasksCount = 0;
+
 
 			for (int i = 0; i < taskCount;i++)
 			{
 				var task = new Task(() =>
 					                    {
 											Thread.Sleep(random.Next(1000));
-						                    completedTasksCount++;
+											lock (this)
+											{
+												completedTasksCount++;
+											}
 					                    });
 				pool.Execute(task, (Priority) random.Next(0, 2));
 			}
 
 			pool.Stop();
-
+			int b = completedTasksCount;
 			Assert.AreEqual(taskCount,completedTasksCount);
 		}
 
