@@ -9,13 +9,12 @@ namespace ThreadPoolTests
 	[TestClass]
 	public class ThreadPoolUnitTests
 	{
-
-		[TestMethod]
-		public void TasksConsistencyTest()
+		
+		public void TasksConsistencyTest(Func<int> taskCountProvider, Func<TimeSpan> taskLengthProvider)
 		{
 			var pool = new ThreadPoolExample.ThreadPool(2);
 			var random = new Random();
-			int taskCount = random.Next(5,10);
+			int taskCount = taskCountProvider();// random.Next(5, 10);
 			int completedTasksCount = 0;
 
 
@@ -23,18 +22,34 @@ namespace ThreadPoolTests
 			{
 				var task = new Task(() =>
 					                    {
-											Thread.Sleep(random.Next(100,1000));
+											Thread.Sleep(taskLengthProvider());
 											lock (this)
 											{
 												completedTasksCount++;
 											}
-					                    });
+					             					                  
+									});
 				pool.Execute(task, (Priority) random.Next(0, 2));
 			}
 
 			pool.Stop();
-			int b = completedTasksCount;
+		
 			Assert.AreEqual(taskCount,completedTasksCount);
+		}
+		private Random _random =new Random();
+		
+		[TestMethod]
+		public void TestManyShortTasks()
+		{
+			TasksConsistencyTest(()=>_random.Next(1000,5000),
+								 ()=>TimeSpan.FromMilliseconds(_random.Next(0,10)));
+		}
+
+		[TestMethod]
+		public void TestFewLongTasks()
+		{
+			TasksConsistencyTest(() => _random.Next(10, 20),
+								 () => TimeSpan.FromMilliseconds(_random.Next(300, 1000)));
 		}
 
 		//[TestMethod]
