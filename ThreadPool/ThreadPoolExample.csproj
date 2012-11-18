@@ -45,6 +45,8 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Task.cs" />
+    <Compile Include="ThreadPoolDispatcher.cs" />
+    <Compile Include="ThreadWorker.cs" />
     <Compile Include="ThreadPool.cs" />
   </ItemGroup>
   <ItemGroup>

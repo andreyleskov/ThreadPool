@@ -34,26 +34,26 @@ namespace ThreadPoolTests
 			Assert.AreEqual(taskCount,completedTasksCount);
 		}
 
-		[TestMethod]
-		public void TasksPriorityTest()
-		{
-			var pool = new ThreadPool(2);
-			var random = new Random();
-			int taskCount = random.Next(1000);
-			var priorityChecker = new PrioritySequenceChecker();
+		//[TestMethod]
+		//public void TasksPriorityTest()
+		//{
+		//	var pool = new ThreadPool(2);
+		//	var random = new Random();
+		//	int taskCount = random.Next(1000);
+		//	var priorityChecker = new PrioritySequenceChecker();
 
-			for (int i = 0; i < taskCount; i++)
-			{
-				var priority = (Priority) random.Next(0, 2);
-				priorityChecker.BuildSequence(priority);
+		//	for (int i = 0; i < taskCount; i++)
+		//	{
+		//		var priority = (Priority) random.Next(0, 2);
+		//		priorityChecker.BuildSequence(priority);
 
-				var task = new Task(() => Assert.AreEqual(true,priorityChecker.CheckSequence(priority)));
+		//		var task = new Task(() => Assert.AreEqual(true,priorityChecker.CheckSequence(priority)));
 
-				pool.Execute(task, priority);
-			}
+		//		pool.Execute(task, priority);
+		//	}
 
-			pool.Stop();
-		}
+		//	pool.Stop();
+		//}
 
 		class PrioritySequenceChecker
 		{
