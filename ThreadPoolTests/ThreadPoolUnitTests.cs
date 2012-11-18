@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ThreadPoolExample;
-using ThreadPool = ThreadPoolExample.ThreadPool;
-using Task = ThreadPoolExample.Task;
 
 namespace ThreadPoolTests
 {
@@ -15,7 +13,7 @@ namespace ThreadPoolTests
 		public void TasksConsistencyTest()
 		{
 			int completedTasksCount = 0;
-			var pool = new ThreadPool(2);
+			var pool = new ThreadPoolExample.ThreadPool(2);
 			var random = new Random();
 			int taskCount = random.Next(10);
 
