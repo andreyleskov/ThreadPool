@@ -4,25 +4,15 @@ using Task = ThreadPoolExample.Task;
 
 namespace ThreadPool
 {
-	class ThreadWorker
+	public class ThreadWorker
 	{
 		private readonly EventWaitHandle _waitHandler = new AutoResetEvent(false);
-		private readonly object _locker = new object();
-		//private readonly Action _taskCompletedCallback;
-		private bool _isBusy;
-		public bool IsBusy 
+		public bool IsBusy
 		{
-			get { return _isBusy; }
-			private set
-			{
-				lock (_locker)
-				{
-					_isBusy = value;
-				}
-			}
+			get; private set; 
 		}
 		
-		private readonly Func<Task> _taskProvider;
+		private readonly TaskQueue _taskProvider;
 		private Thread _runThread;
 
 		private bool _isStopped;
@@ -43,12 +33,9 @@ namespace ThreadPool
 			_waitHandler.Set();
 		}
 
-		public ThreadWorker(Func<Task> taskProvider)
+		public ThreadWorker(TaskQueue taskProvider)
 		{
 			if(taskProvider == null) throw new ArgumentException("TaskProvider");
-			//if (taskCompletedCallback == null) throw new ArgumentException("TaskCompletedCallback");
-
-			//_taskCompletedCallback = taskCompletedCallback;
 			_taskProvider = taskProvider;
 		}
 
@@ -63,24 +50,18 @@ namespace ThreadPool
 			ResetThreadState();
 			while (!_isStopped)
 			{
-				Pause();
+				Task task;
+				_taskProvider.Take(out task);
 				IsBusy = true;
-				Task task = _taskProvider.Invoke();
-				if (task == null)
-				{
-					IsBusy = false;
-					continue;
-				}
-				
 				try
 				{
+					if(task != null)
 					task.Execute();
 				}
 				finally
 				{
 					ResetThreadState();
 					IsBusy = false;
-					//_taskCompletedCallback();
 				}
 			}
 		}

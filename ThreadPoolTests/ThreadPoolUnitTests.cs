@@ -73,7 +73,7 @@ namespace ThreadPoolTests
 			{
 				var priority = (Priority)random.Next(0, 2);
 				priorityChecker.BuildSequence(priority);
-
+				
 				var task = new Task(() =>
 					                    {
 											Thread.Sleep(random.Next(10,20));
