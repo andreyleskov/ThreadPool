@@ -14,43 +14,55 @@ namespace ThreadPoolExample
 //а после вызова stop() новые задачи не добавляются в очередь на выполнение, 
 //и метод boolean execute(Task task, Priority priority) сразу же возвращает false.	
 //* В конструктор этого класса должно передаваться количество потоков, которые будут выполнять задачи.
-public class ThreadPool: IThreadPool
-{
+	public class ThreadPool
+	{
 		private readonly int _maxThreadNum;
 		private volatile bool _isRunning = true;
-	   
-		private readonly Thread _dispatcherThread;
+
 		private readonly List<ThreadWorker> _threadWorkerList = new List<ThreadWorker>();
-		private readonly ThreadPoolDispatcher _dispatcher;
 		private int _threadCounter;
-		private TaskQueue _queue = new TaskQueue();
+		public TaskQueue Queue {get;private set;}
 
 		//* В конструктор этого класса должно передаваться количество потоков, которые будут выполнять задачи.
-				   
+
 		public ThreadPool(int maxThreadNum)
 		{
 			_maxThreadNum = maxThreadNum;
-	
-			_dispatcher = new ThreadPoolDispatcher(this);
-			_dispatcherThread = new Thread(_dispatcher.CallWorkers) {Name ="Dispatcher thread", IsBackground = true};
-			_dispatcherThread.Start();
 		}
-
 
 		private ThreadWorker InitNewWorkingThread()
 		{
-			var worker = new ThreadWorker(_queue);
-			var thread = new Thread(worker.Run) {Name = "Pool thread #" + ++_threadCounter, IsBackground = true };
+			var worker = new ThreadWorker(Queue);
+			var thread = new Thread(worker.Run) {Name = "Pool thread #" + ++_threadCounter, IsBackground = true};
 			thread.Start();
 			return worker;
 		}
 
-		public bool Execute(Task task,Priority priority)
+		private volatile bool _canCreateNewThreads = true;
+	    private readonly object _locker = new object(); 
+
+		public bool Execute(Task task, Priority priority)
 		{
-			if(_isRunning)
+			if (_isRunning)
 			{
-				_queue.TryAdd(task, priority);
+				Queue.Add(task, priority);
+
+				if (_canCreateNewThreads)
+				{
+					lock (_locker)
+					{
+						if (_canCreateNewThreads)
+						{
+							if (_threadWorkerList.All(w => w.IsBusy) || !_threadWorkerList.Any())
+								_threadWorkerList.Add(InitNewWorkingThread());
+
+							_canCreateNewThreads = _threadWorkerList.Count < _maxThreadNum;
+						}
+					}
+				}
+
 			}
+
 			return _isRunning;
 		}
 
@@ -58,33 +70,8 @@ public class ThreadPool: IThreadPool
 		public void Stop()
 		{
 			_isRunning = false;
-			ThreadWorker[] activeWorkers = GetBusyWorkers();
-			_queue.Complete();
-			if (activeWorkers == null || activeWorkers.Length == 0) return;
-
-			foreach (ThreadWorker worker in activeWorkers)
-				worker.Stop();
+			Queue.Complete();
 		}
-
-		#region IThreadPool Members
-
-		public ThreadWorker[] GetBusyWorkers()
-		{
-			return _threadWorkerList.Where(w => w.IsBusy).ToArray();
-		}
-
-		public ThreadWorker GetFreeWorker()
-		{
-			ThreadWorker worker = _threadWorkerList.FirstOrDefault(w => !w.IsBusy);
-			if (worker == null && _threadWorkerList.Count < _maxThreadNum)
-			{
-				worker = InitNewWorkingThread();
-				_threadWorkerList.Add(worker);
-			}
-
-			return worker;
-		}
-
-		#endregion
+	}
 }
 }

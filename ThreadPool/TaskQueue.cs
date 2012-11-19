@@ -3,61 +3,119 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using ThreadPoolExample;
 
 
 namespace ThreadPool
 {
+    public struct PriorityTask
+    {
+	    public Priority Priority;
+	    public Task Task;
+    }
+
 	//will block execution on Take()
-	public class TaskQueue
+	public class TaskQueue: IProducerConsumerCollection<PriorityTask>
 	{
+		private const int MaxHighTasksBeforeNormal = 3;
+		private int _priorityTasksRemains = MaxHighTasksBeforeNormal;
 
-		//foreach (Priority priority in Enum.GetValues(typeof(Priority)))
-		//_pendingTasks[priority] = new ConcurrentQueue<Task>();
+		private ConcurrentDictionary<Priority, ConcurrentQueue<Task>> _pendingTasks = new ConcurrentDictionary<Priority, ConcurrentQueue<Task>>();  
 
-		//private readonly ConcurrentDictionary<Priority, ConcurrentQueue<Task>> _pendingTasks = new ConcurrentDictionary<Priority, ConcurrentQueue<Task>>();
-		//private const int HightToNormalPriorityBound = 3;
-		//private int _priorityTasksRemains = HightToNormalPriorityBound;
-		//Task result=null;
-
-		//		if (_priorityTasksRemains <= 0 && !_pendingTasks[Priority.High].IsEmpty)
-		//		{
-		//			if (_pendingTasks[Priority.Normal].IsEmpty) Interlocked.Decrement(ref _priorityTasksRemains);
-
-		//			_pendingTasks[Priority.High].TryDequeue(out result);
-		//			return result;
-		//		}
-
-		//		if (!_pendingTasks[Priority.Normal].IsEmpty)
-		//		{
-		//			_pendingTasks[Priority.Normal].TryDequeue(out result);
-		//			return result;
-		//		}
-
-		//		if (!_pendingTasks[Priority.Low].IsEmpty)
-		//			_pendingTasks[Priority.Low].TryDequeue(out result);
-
-		//		return result;
-		public void Complete()
+		public bool TryAdd(PriorityTask item)
 		{
+			_pendingTasks[item.Priority].Enqueue(item.Task);
+			return true;							  
 		}
 
-		public IEnumerable<Task> GetTasksEnumerable()
+		public bool TryTake(out PriorityTask item)
 		{
-			return null;
+			lock (_pendingTasks)
+			{
+				Task task = null;
+				Priority priority;
+
+				if (_priorityTasksRemains <= 0 && _pendingTasks[Priority.High].Count > 0)
+				{
+					if (_pendingTasks[Priority.Normal].Any()) _priorityTasksRemains--;
+
+					priority = Priority.High;
+					_pendingTasks[priority].TryDequeue(out task);
+				}
+				else
+				{
+					priority = Priority.Normal;
+					if (_pendingTasks[priority].Count > 0)
+						_pendingTasks[priority].TryDequeue(out task);
+					_priorityTasksRemains = MaxHighTasksBeforeNormal;
+				}
+
+				if (task == null)
+				{
+					priority = Priority.Low;
+					_pendingTasks[priority].TryDequeue(out task);
+				}
+
+				item = new PriorityTask{Priority = priority,Task=task};
+				return task != null;
+			}
 		}
-		public bool IsEmpty { get; private set; }
-	
-		public bool TryAdd(Task item,Priority priority)
+
+		#region IProducerConsumerCollection<PriorityTask> Members
+
+		public void CopyTo(PriorityTask[] array, int index)
 		{
 			throw new NotImplementedException();
 		}
 
-		public bool Take(out Task item)
+		public PriorityTask[] ToArray()
 		{
 			throw new NotImplementedException();
 		}
 
-	
+		#endregion
+
+		#region IEnumerable<PriorityTask> Members
+
+		public IEnumerator<PriorityTask> GetEnumerator()
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		#region IEnumerable Members
+
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		#region ICollection Members
+
+		public void CopyTo(Array array, int index)
+		{
+			throw new NotImplementedException();
+		}
+
+		public int Count
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public bool IsSynchronized
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public object SyncRoot
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		#endregion
 	}
 }

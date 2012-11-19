@@ -6,32 +6,12 @@ namespace ThreadPool
 {
 	public class ThreadWorker
 	{
-		private readonly EventWaitHandle _waitHandler = new AutoResetEvent(false);
 		public bool IsBusy
 		{
 			get; private set; 
 		}
 		
 		private readonly TaskQueue _taskProvider;
-		private Thread _runThread;
-
-		private bool _isStopped;
-		public void Stop()
-		{
-			_isStopped = true;
-			Continue();
-			_runThread.Join();
-		}
-
-		public void Pause()
-		{
-			_waitHandler.WaitOne();
-		}
-
-		public void Continue()
-		{
-			_waitHandler.Set();
-		}
 
 		public ThreadWorker(TaskQueue taskProvider)
 		{
@@ -46,16 +26,13 @@ namespace ThreadPool
 
 		public void Run()
 		{
-			_runThread = Thread.CurrentThread;
 			ResetThreadState();
-			while (!_isStopped)
+			foreach(Task task in _taskProvider.GetTasksEnumerable())
 			{
-				Task task;
-				_taskProvider.Take(out task);
-				IsBusy = true;
 				try
 				{
-					if(task != null)
+					if (task == null) continue;
+					IsBusy = true;
 					task.Execute();
 				}
 				finally
