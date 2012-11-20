@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using ThreadPoolExample;
 
-namespace ThreadPool
+namespace ThreadPoolExample
 {
-	class PriorityQueue<T> where T:class
+	public class PriorityQueue<T> where T:class
 	{
 		private readonly LinkedList<KeyValuePair<Priority, T>> _queue = new LinkedList<KeyValuePair<Priority, T>>();
 		private LinkedListNode<KeyValuePair<Priority, T>> _firstLowTask;
