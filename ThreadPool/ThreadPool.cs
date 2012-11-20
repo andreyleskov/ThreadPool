@@ -45,7 +45,7 @@ namespace ThreadPoolExample
 		{
 			if (_isRunning)
 			{
-				Queue.Add(task, priority);
+			//	Queue.Add(task, priority);
 
 				if (_canCreateNewThreads)
 				{
@@ -70,8 +70,8 @@ namespace ThreadPoolExample
 		public void Stop()
 		{
 			_isRunning = false;
-			Queue.Complete();
+		//	Queue.Complete();
 		}
 	}
 }
-}
+

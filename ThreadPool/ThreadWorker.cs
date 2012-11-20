@@ -27,7 +27,7 @@ namespace ThreadPool
 		public void Run()
 		{
 			ResetThreadState();
-			foreach(Task task in _taskProvider.GetTasksEnumerable())
+			foreach(Task task in (new Task[2]))//_taskProvider.GetTasksEnumerable())
 			{
 				try
 				{
