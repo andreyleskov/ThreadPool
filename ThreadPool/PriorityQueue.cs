@@ -57,7 +57,10 @@ namespace ThreadPoolExample
 							//block ends
 							_highTaskBlockLength = 0;
 							_queue.AddAfter(_firstUnbalancedNormalTask,newTask);
-							_firstUnbalancedNormalTask = _firstUnbalancedNormalTask.Next;
+
+							_firstUnbalancedNormalTask = _firstUnbalancedNormalTask.Next != null
+									                            ? _firstUnbalancedNormalTask.Next.Next
+									                            : null;
 						}
 						else
 						{
