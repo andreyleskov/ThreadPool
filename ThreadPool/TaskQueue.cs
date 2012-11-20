@@ -15,7 +15,7 @@ namespace ThreadPool
 	    public Task Task;
     }
 
-	//will block execution on Take()
+	//will block execution on Dequeue()
 	public class TaskQueue: IProducerConsumerCollection<PriorityTask>
 	{
 		private const int MaxHighTasksBeforeNormal = 3;

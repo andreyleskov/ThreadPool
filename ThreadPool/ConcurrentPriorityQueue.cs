@@ -16,189 +16,78 @@ using ThreadPool;
 namespace ThreadPoolExample
 {
     /// <summary>Provides a thread-safe priority queue data structure.</summary>
-    /// <typeparam name="TKey">Specifies the type of keys used to prioritize values.</typeparam>
-    /// <typeparam name="TValue">Specifies the type of elements in the queue.</typeparam>
+    /// <typeparam name="T">Specifies the type of elements in the queue.</typeparam>
     [DebuggerDisplay("Count={Count}")]
-    public class ConcurrentPriorityQueue<TKey, TValue> :
-        IProducerConsumerCollection<KeyValuePair<TKey,TValue>> 
-        where TKey : IComparable<TKey>
+    public class ConcurrentPriorityQueue<T> : IProducerConsumerCollection<KeyValuePair<Priority,T>> where T:class 
     {
         private readonly object _syncLock = new object();
-        private readonly MinBinaryHeap<TKey,TValue> _minHeap = new MinBinaryHeap<TKey,TValue>();
+        private readonly PriorityQueue<T> _queue = new PriorityQueue<T>();
 
-        /// <summary>Initializes a new instance of the ConcurrentPriorityQueue class.</summary>
-        public ConcurrentPriorityQueue() {}
 
-        /// <summary>Initializes a new instance of the ConcurrentPriorityQueue class that contains elements copied from the specified collection.</summary>
-        /// <param name="collection">The collection whose elements are copied to the new ConcurrentPriorityQueue.</param>
-        public ConcurrentPriorityQueue(IEnumerable<KeyValuePair<TKey, TValue>> collection)
-        {
-            if (collection == null) throw new ArgumentNullException("collection");
-            foreach (var item in collection) _minHeap.Insert(item);
-        }
+		#region IProducerConsumerCollection<KeyValuePair<Priority,T>> Members
 
-        /// <summary>Adds the key/value pair to the priority queue.</summary>
-        /// <param name="priority">The priority of the item to be added.</param>
-        /// <param name="value">The item to be added.</param>
-        public void Enqueue(TKey priority, TValue value)
-        {
-            Enqueue(new KeyValuePair<TKey, TValue>(priority, value));
-        }
+		public void CopyTo(KeyValuePair<Priority, T>[] array, int index)
+		{
+			throw new NotImplementedException();
+		}
 
-        /// <summary>Adds the key/value pair to the priority queue.</summary>
-        /// <param name="item">The key/value pair to be added to the queue.</param>
-        public void Enqueue(KeyValuePair<TKey, TValue> item)
-        {
-            lock (_syncLock) _minHeap.Insert(item);
-        }
+		public KeyValuePair<Priority, T>[] ToArray()
+		{
+			throw new NotImplementedException();
+		}
 
-        /// <summary>Attempts to remove and return the next prioritized item in the queue.</summary>
-        /// <param name="result">
-        /// When this method returns, if the operation was successful, result contains the object removed. If
-        /// no object was available to be removed, the value is unspecified.
-        /// </param>
-        /// <returns>
-        /// true if an element was removed and returned from the queue succesfully; otherwise, false.
-        /// </returns>
-        public bool TryDequeue(out KeyValuePair<TKey, TValue> result)
-        {
-            result = default(KeyValuePair<TKey, TValue>);
-            lock (_syncLock)
-            {
-                if (_minHeap.Count > 0)
-                {
-                    result = _minHeap.Remove();
-                    return true;
-                }
-            }
-            return false;
-        }
+		public bool TryAdd(KeyValuePair<Priority, T> item)
+		{
+			throw new NotImplementedException();
+		}
 
-        /// <summary>Attempts to return the next prioritized item in the queue.</summary>
-        /// <param name="result">
-        /// When this method returns, if the operation was successful, result contains the object.
-        /// The queue was not modified by the operation.
-        /// </param>
-        /// <returns>
-        /// true if an element was returned from the queue succesfully; otherwise, false.
-        /// </returns>
-        public bool TryPeek(out KeyValuePair<TKey, TValue> result)
-        {
-            result = default(KeyValuePair<TKey, TValue>);
-            lock (_syncLock)
-            {
-                if (_minHeap.Count > 0)
-                {
-                    result = _minHeap.Peek();
-                    return true;
-                }
-            }
-            return false;
-        }
+		public bool TryTake(out KeyValuePair<Priority, T> item)
+		{
+			throw new NotImplementedException();
+		}
 
-        /// <summary>Empties the queue.</summary>
-        public void Clear() { lock(_syncLock) _minHeap.Clear(); }
+		#endregion
 
-        /// <summary>Gets whether the queue is empty.</summary>
-        public bool IsEmpty { get { return Count == 0; } }
+		#region IEnumerable<KeyValuePair<Priority,T>> Members
 
-        /// <summary>Gets the number of elements contained in the queue.</summary>
-        public int Count
-        {
-            get { lock (_syncLock) return _minHeap.Count; }
-        }
+		public IEnumerator<KeyValuePair<Priority, T>> GetEnumerator()
+		{
+			throw new NotImplementedException();
+		}
 
-        /// <summary>Copies the elements of the collection to an array, starting at a particular array index.</summary>
-        /// <param name="array">
-        /// The one-dimensional array that is the destination of the elements copied from the queue.
-        /// </param>
-        /// <param name="index">
-        /// The zero-based index in array at which copying begins.
-        /// </param>
-        /// <remarks>The elements will not be copied to the array in any guaranteed order.</remarks>
-        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int index)
-        {
-            lock (_syncLock) _minHeap.Items.CopyTo(array, index);
-        }
+		#endregion
 
-        /// <summary>Copies the elements stored in the queue to a new array.</summary>
-        /// <returns>A new array containing a snapshot of elements copied from the queue.</returns>
-        public KeyValuePair<TKey, TValue>[] ToArray()
-        {
-            lock (_syncLock)
-            {
-                var clonedHeap = new MinBinaryHeap<TKey,TValue>(_minHeap);
-                var result = new KeyValuePair<TKey, TValue>[_minHeap.Count];
-                for (int i = 0; i < result.Length; i++)
-                {
-                    result[i] = clonedHeap.Remove();
-                }
-                return result;
-            }
-        }
+		#region IEnumerable Members
 
-        /// <summary>Attempts to add an item in the queue.</summary>
-        /// <param name="item">The key/value pair to be added.</param>
-        /// <returns>
-        /// true if the pair was added; otherwise, false.
-        /// </returns>
-        bool IProducerConsumerCollection<KeyValuePair<TKey, TValue>>.TryAdd(KeyValuePair<TKey, TValue> item)
-        {
-            Enqueue(item);
-            return true;
-        }
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			throw new NotImplementedException();
+		}
 
-        /// <summary>Attempts to remove and return the next prioritized item in the queue.</summary>
-        /// <param name="item">
-        /// When this method returns, if the operation was successful, result contains the object removed. If
-        /// no object was available to be removed, the value is unspecified.
-        /// </param>
-        /// <returns>
-        /// true if an element was removed and returned from the queue succesfully; otherwise, false.
-        /// </returns>
-        bool IProducerConsumerCollection<KeyValuePair<TKey, TValue>>.TryTake(out KeyValuePair<TKey, TValue> item)
-        {
-            return TryDequeue(out item);
-        }
+		#endregion
 
-        /// <summary>Returns an enumerator that iterates through the collection.</summary>
-        /// <returns>An enumerator for the contents of the queue.</returns>
-        /// <remarks>
-        /// The enumeration represents a moment-in-time snapshot of the contents of the queue. It does not
-        /// reflect any updates to the collection after GetEnumerator was called. The enumerator is safe to
-        /// use concurrently with reads from and writes to the queue.
-        /// </remarks>
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-        {
-            var arr = ToArray();
-            return ((IEnumerable<KeyValuePair<TKey, TValue>>)arr).GetEnumerator();
-        }
+		#region ICollection Members
 
-        /// <summary>Returns an enumerator that iterates through a collection.</summary>
-        /// <returns>An IEnumerator that can be used to iterate through the collection.</returns>
-        IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+		public void CopyTo(Array array, int index)
+		{
+			throw new NotImplementedException();
+		}
 
-        /// <summary>Copies the elements of the collection to an array, starting at a particular array index.</summary>
-        /// <param name="array">
-        /// The one-dimensional array that is the destination of the elements copied from the queue.
-        /// </param>
-        /// <param name="index">
-        /// The zero-based index in array at which copying begins.
-        /// </param>
-        void ICollection.CopyTo(Array array, int index)
-        {
-            lock (_syncLock) ((ICollection)_minHeap.Items).CopyTo(array, index);
-        }
+		public int Count
+		{
+			get { throw new NotImplementedException(); }
+		}
 
-        /// <summary>
-        /// Gets a value indicating whether access to the ICollection is synchronized with the SyncRoot.
-        /// </summary>
-        bool ICollection.IsSynchronized { get { return true; } }
+		public bool IsSynchronized
+		{
+			get { throw new NotImplementedException(); }
+		}
 
-        /// <summary>
-        /// Gets an object that can be used to synchronize access to the collection.
-        /// </summary>
-        object ICollection.SyncRoot { get { return _syncLock; } }
+		public object SyncRoot
+		{
+			get { throw new NotImplementedException(); }
+		}
 
-    }
+		#endregion
+	}
 }

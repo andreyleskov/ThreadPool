@@ -45,7 +45,7 @@ namespace ThreadPoolExample
 		{
 			if (_isRunning)
 			{
-			//	Queue.Add(task, priority);
+			//	Queue.Enqueue(task, priority);
 
 				if (_canCreateNewThreads)
 				{
