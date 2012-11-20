@@ -22,11 +22,11 @@ namespace ThreadPoolExample
 			{
 				//Low tasks always placed to end
 				case Priority.Low:
-					
-					var lowTask = _queue.AddLast(newTask);
 
-					if (_queue.Last != null && _queue.Last.Value.Key != Priority.Low)
-						_firstLowTask = lowTask;
+					if (_queue.Last == null  || (_queue.Last != null && _queue.Last.Value.Key != Priority.Low))
+						_firstLowTask =  _queue.AddLast(newTask);
+					else
+						_queue.AddLast(newTask);
 
 					break;
 				//Normal tasks placed before low ones
@@ -52,7 +52,7 @@ namespace ThreadPoolExample
 					}
 					else
 					{
-						if (++_highTaskBlockLength == NormalToHighRatio)
+						if (_highTaskBlockLength++ == NormalToHighRatio)
 						{
 							//block ends
 							_highTaskBlockLength = 0;

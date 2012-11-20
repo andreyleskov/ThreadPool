@@ -7,24 +7,46 @@ namespace ThreadPoolTests
 	[TestClass]
 	public class PriorityQueueUnitTests
 	{
-
-		private void MonoTasksTest(Priority priority,int num)
+		[TestMethod]
+		public void MonoLowPriorityTasksTest()
 		{
 			var queue = new PriorityQueue<object>();
-			for(int i=0;i<num;i++)
-				queue.Enqueue(priority,i);
+			queue.Enqueue(Priority.Low, 1);
+			queue.Enqueue(Priority.Low, 2);
+			queue.Enqueue(Priority.Low, 3);
 
-			for (int i = 0; i < num; i++)
-				Assert.AreEqual(i, queue.Dequeue());
+			Assert.AreEqual(1, queue.Dequeue());
+			Assert.AreEqual(2, queue.Dequeue());
+			Assert.AreEqual(3, queue.Dequeue());
+
 		}
 
-		Random _random = new Random();
+		[TestMethod]
+		public void MonoHighPriorityTasksTest()
+		{
+			var queue = new PriorityQueue<object>();
+			queue.Enqueue(Priority.High, 1);
+			queue.Enqueue(Priority.High, 2);
+			queue.Enqueue(Priority.High, 3);
+
+			Assert.AreEqual(1, queue.Dequeue());
+			Assert.AreEqual(2, queue.Dequeue());
+			Assert.AreEqual(3, queue.Dequeue());
+
+		}
 
 		[TestMethod]
-		public void MonoPriorityTasksTest()
+		public void MonoNormalPriorityTasksTest()
 		{
-			foreach(Priority priority in Enum.GetValues(typeof(Priority)))
-				MonoTasksTest(priority,_random.Next(10,20));
+			var queue = new PriorityQueue<object>();
+			queue.Enqueue(Priority.Normal, 1);
+			queue.Enqueue(Priority.Normal, 2);
+			queue.Enqueue(Priority.Normal, 3);
+
+			Assert.AreEqual(1, queue.Dequeue());
+			Assert.AreEqual(2, queue.Dequeue());
+			Assert.AreEqual(3, queue.Dequeue());
+
 		}
 
 		[TestMethod]
