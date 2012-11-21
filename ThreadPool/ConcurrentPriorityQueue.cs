@@ -22,7 +22,6 @@ namespace ThreadPool
         private readonly object _syncLock = new object();
         private readonly PriorityQueue<T> _queue = new PriorityQueue<T>();
 
-
 		#region IProducerConsumerCollection<KeyValuePair<Priority,T>> Members
 
 		public void CopyTo(KeyValuePair<Priority, T>[] array, int index)
@@ -37,12 +36,19 @@ namespace ThreadPool
 
 		public bool TryAdd(KeyValuePair<Priority, T> item)
 		{
-			throw new NotImplementedException();
+			lock(_syncLock)
+			{
+				_queue.Enqueue(item.Key,item.Value);
+				return true;
+			}
 		}
 
 		public bool TryTake(out KeyValuePair<Priority, T> item)
 		{
-			throw new NotImplementedException();
+			lock (_syncLock)
+			{
+				return _queue.TryDequeue(out item);
+			}
 		}
 
 		#endregion

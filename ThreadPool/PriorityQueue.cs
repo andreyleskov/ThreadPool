@@ -68,11 +68,17 @@ namespace ThreadPool
 			}
 		}
 
-		public T Dequeue()
+		public bool TryDequeue(out KeyValuePair<Priority,T> item)
 		{
-			var firstNode = _queue.First;
-			_queue.RemoveFirst();
-			return firstNode.Value.Value;
+			item = new KeyValuePair<Priority, T>(Priority.Low,null);
+			LinkedListNode<KeyValuePair<Priority, T>> firstNode = _queue.First;
+			if (firstNode != null)
+			{
+				_queue.RemoveFirst();
+				item = firstNode.Value;
+				return true;
+			}
+			return false;
 		}
 	}
 }

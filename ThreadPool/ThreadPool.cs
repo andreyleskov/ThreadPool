@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
@@ -15,9 +16,10 @@ namespace ThreadPool
 		private readonly int _maxThreadNum;
 		private volatile bool _isRunning = true;
 
-		private readonly List<ThreadWorker> _threadWorkerList = new List<ThreadWorker>();
+		private readonly List<ThreadWorker<Priority, Task>> _threadWorkerList = new List<ThreadWorker<Priority, Task>>();
 		private int _threadCounter;
-		public TaskQueue Queue {get;private set;}
+		private readonly BlockingCollection<KeyValuePair<Priority, Task>> _queue 
+			= new BlockingCollection<KeyValuePair<Priority, Task>>(new ConcurrentPriorityQueue<Task>());
 
 		//* В конструктор этого класса должно передаваться количество потоков, которые будут выполнять задачи.
 
@@ -26,9 +28,10 @@ namespace ThreadPool
 			_maxThreadNum = maxThreadNum;
 		}
 
-		private ThreadWorker InitNewWorkingThread()
+
+		private ThreadWorker<Priority, Task> InitNewWorkingThread()
 		{
-			var worker = new ThreadWorker(Queue);
+			var worker = new ThreadWorker<Priority,Task>(_queue);
 			var thread = new Thread(worker.Run) {Name = "Pool thread #" + ++_threadCounter, IsBackground = true};
 			thread.Start();
 			return worker;
@@ -41,7 +44,7 @@ namespace ThreadPool
 		{
 			if (_isRunning)
 			{
-			//	Queue.Enqueue(task, priority);
+			//	_queue.Enqueue(task, priority);
 
 				if (_canCreateNewThreads)
 				{
@@ -66,7 +69,7 @@ namespace ThreadPool
 		public void Stop()
 		{
 			_isRunning = false;
-		//	Queue.Complete();
+		//	_queue.Complete();
 		}
 	}
 }

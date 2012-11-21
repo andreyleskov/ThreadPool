@@ -1,19 +1,21 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using Task = ThreadPool.Task;
 
 namespace ThreadPool
 {
-	public class ThreadWorker
+	public class ThreadWorker<TPriority,T> where T:Task
 	{
 		public bool IsBusy
 		{
 			get; private set; 
 		}
-		
-		private readonly TaskQueue _taskProvider;
 
-		public ThreadWorker(TaskQueue taskProvider)
+		private readonly BlockingCollection<KeyValuePair<TPriority, T>> _taskProvider;
+
+		public ThreadWorker(BlockingCollection<KeyValuePair<TPriority,T>> taskProvider)
 		{
 			if(taskProvider == null) throw new ArgumentException("TaskProvider");
 			_taskProvider = taskProvider;
@@ -27,13 +29,13 @@ namespace ThreadPool
 		public void Run()
 		{
 			ResetThreadState();
-			foreach(Task task in (new Task[2]))//_taskProvider.GetTasksEnumerable())
+			foreach (KeyValuePair<TPriority, T> task in _taskProvider.GetConsumingEnumerable())
 			{
 				try
 				{
-					if (task == null) continue;
+					if (task.Value == null) continue;
 					IsBusy = true;
-					task.Execute();
+					task.Value.Execute();
 				}
 				finally
 				{
