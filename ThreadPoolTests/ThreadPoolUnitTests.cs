@@ -30,17 +30,7 @@ namespace ThreadPoolTests
 		
 			Assert.AreEqual(taskCount,completedTasksCount);
 		}
-		private Random _random =new Random();
-
-
-		private long Measure(Action act)
-		{
-			var stopWatch = new Stopwatch();
-			stopWatch.Start();
-			act.Invoke();
-			stopWatch.Stop();
-			return stopWatch.ElapsedMilliseconds;
-		}
+		private readonly Random _random =new Random();
 
 		[TestMethod]
 		public void TestManyShortTasks()

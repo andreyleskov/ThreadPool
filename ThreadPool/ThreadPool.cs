@@ -72,7 +72,8 @@ namespace ThreadPool
 				_isRunning = false;
 				_queue.CompleteAdding();
 				foreach (ThreadWorker<Priority, Task> worker in _threadWorkerList)
-					worker.Thread.Join();
+					if(worker.Thread!=null)
+				         worker.Thread.Join();
 			}
 		}
 	}
