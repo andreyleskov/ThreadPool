@@ -43,7 +43,8 @@
   <ItemGroup>
     <Compile Include="ConcurrentPriorityQueue.cs" />
     <Compile Include="Priority.cs" />
-    <Compile Include="PriorityQueue.cs" />
+    <Compile Include="PriorityQueueDictionary.cs" />
+    <Compile Include="PriorityQueueList.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Task.cs" />

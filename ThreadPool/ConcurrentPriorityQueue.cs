@@ -21,7 +21,7 @@ namespace ThreadPoolExample
     public class ConcurrentPriorityQueue<T> : IProducerConsumerCollection<KeyValuePair<Priority,T>> where T:class 
     {
         private readonly object _syncLock = new object();
-        private readonly PriorityQueue<T> _queue = new PriorityQueue<T>();
+        private readonly PriorityQueueList<T> _queueList = new PriorityQueueList<T>();
 
 
 		#region IProducerConsumerCollection<KeyValuePair<Priority,T>> Members

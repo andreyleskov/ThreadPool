@@ -10,7 +10,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void MonoLowPriorityTasksTest()
 		{
-			var queue = new PriorityQueue<object>();
+			var queue = new PriorityQueueList<object>();
 			queue.Enqueue(Priority.Low, 1);
 			queue.Enqueue(Priority.Low, 2);
 			queue.Enqueue(Priority.Low, 3);
@@ -24,7 +24,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void MonoHighPriorityTasksTest()
 		{
-			var queue = new PriorityQueue<object>();
+			var queue = new PriorityQueueList<object>();
 			queue.Enqueue(Priority.High, 1);
 			queue.Enqueue(Priority.High, 2);
 			queue.Enqueue(Priority.High, 3);
@@ -38,7 +38,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void MonoNormalPriorityTasksTest()
 		{
-			var queue = new PriorityQueue<object>();
+			var queue = new PriorityQueueList<object>();
 			queue.Enqueue(Priority.Normal, 1);
 			queue.Enqueue(Priority.Normal, 2);
 			queue.Enqueue(Priority.Normal, 3);
@@ -52,7 +52,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void IncrementPrioritySequenceTest()
 		{
-			var queue = new PriorityQueue<object>();
+			var queue = new PriorityQueueList<object>();
 
 			queue.Enqueue(Priority.Low, 1);
 			queue.Enqueue(Priority.Low, 2);
@@ -74,7 +74,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void DecrementPrioritySequenceTest()
 		{
-			var queue = new PriorityQueue<object>();
+			var queue = new PriorityQueueList<object>();
 
 			queue.Enqueue(Priority.High, 1);
 			queue.Enqueue(Priority.High, 2);
@@ -96,7 +96,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void IncrementPrioritySequenceWithOverflowTest()
 		{
-			var queue = new PriorityQueue<object>();
+			var queue = new PriorityQueueList<object>();
 
 			queue.Enqueue(Priority.Low, 1);
 			queue.Enqueue(Priority.Low, 2);
@@ -122,7 +122,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void MixedPrioritySequenceTest()
 		{
-			var queue = new PriorityQueue<object>();
+			var queue = new PriorityQueueList<object>();
 
 			queue.Enqueue(Priority.Low,    1);
 			queue.Enqueue(Priority.Normal, 2);	
@@ -143,7 +143,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void MixedPrioritySequenceWithOverflowTest()
 		{
-			var queue = new PriorityQueue<object>();
+			var queue = new PriorityQueueList<object>();
 
 			queue.Enqueue(Priority.Low, 1);
 			queue.Enqueue(Priority.Normal, 2);
@@ -180,7 +180,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void MixedPrioritySequenceWithDoubleOverflowTest()
 		{
-			var queue = new PriorityQueue<object>(); 
+			var queue = new PriorityQueueList<object>(); 
 
 			queue.Enqueue(Priority.Low, 1);
 			queue.Enqueue(Priority.Normal, 2);

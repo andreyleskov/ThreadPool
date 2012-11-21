@@ -7,7 +7,7 @@ using ThreadPoolExample;
 
 namespace ThreadPoolExample
 {
-	public class PriorityQueue<T> where T:class
+	public class PriorityQueueList<T> where T:class
 	{
 		private readonly LinkedList<KeyValuePair<Priority, T>> _queue = new LinkedList<KeyValuePair<Priority, T>>();
 		private LinkedListNode<KeyValuePair<Priority, T>> _firstLowTask;
