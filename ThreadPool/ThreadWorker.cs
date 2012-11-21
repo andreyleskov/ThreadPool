@@ -26,9 +26,12 @@ namespace ThreadPool
 			Thread.CurrentThread.Priority = ThreadPriority.Normal;	
 		}
 
+		public Thread Thread { get; private set; }
 		public void Run()
 		{
 			ResetThreadState();
+			Thread = Thread.CurrentThread;
+
 			foreach (KeyValuePair<TPriority, T> task in _taskProvider.GetConsumingEnumerable())
 			{
 				try

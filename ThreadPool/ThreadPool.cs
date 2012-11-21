@@ -28,7 +28,6 @@ namespace ThreadPool
 			_maxThreadNum = maxThreadNum;
 		}
 
-
 		private ThreadWorker<Priority, Task> InitNewWorkingThread()
 		{
 			var worker = new ThreadWorker<Priority,Task>(_queue);
@@ -42,34 +41,39 @@ namespace ThreadPool
 
 		public bool Execute(Task task, Priority priority)
 		{
-			if (_isRunning)
+			lock(_locker)
 			{
-			//	_queue.Enqueue(task, priority);
-
-				if (_canCreateNewThreads)
+				if (_isRunning)
 				{
-					lock (_locker)
-					{
-						if (_canCreateNewThreads)
-						{
-							if (_threadWorkerList.All(w => w.IsBusy) || !_threadWorkerList.Any())
-								_threadWorkerList.Add(InitNewWorkingThread());
+					_queue.TryAdd(new KeyValuePair<Priority, Task>(priority, task));
 
-							_canCreateNewThreads = _threadWorkerList.Count < _maxThreadNum;
-						}
+					if ((_queue.Count > 1 || _queue.Count ==0 ) && _canCreateNewThreads)
+					{
+							if (_canCreateNewThreads)
+							{
+								if (_threadWorkerList.All(w => w.IsBusy) || !_threadWorkerList.Any())
+									_threadWorkerList.Add(InitNewWorkingThread());
+
+								_canCreateNewThreads = _threadWorkerList.Count < _maxThreadNum;
+							}
 					}
+
 				}
 
+				return _isRunning;
 			}
-
-			return _isRunning;
 		}
 
 		//* Метод stop() ожидает завершения всех текущих задач (не очищая очередь).
 		public void Stop()
 		{
-			_isRunning = false;
-		//	_queue.Complete();
+			lock(_locker)
+			{
+				_isRunning = false;
+				_queue.CompleteAdding();
+				foreach (ThreadWorker<Priority, Task> worker in _threadWorkerList)
+					worker.Thread.Join();
+			}
 		}
 	}
 }

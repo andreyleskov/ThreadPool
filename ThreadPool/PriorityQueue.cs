@@ -2,9 +2,8 @@
 
 namespace ThreadPool
 {
-	public class PriorityQueue<T> where T:class
+	public class PriorityQueue<T>:LinkedList<KeyValuePair<Priority, T>> where T:class
 	{
-		private readonly LinkedList<KeyValuePair<Priority, T>> _queue = new LinkedList<KeyValuePair<Priority, T>>();
 		private LinkedListNode<KeyValuePair<Priority, T>> _firstLowTask;
 		private LinkedListNode<KeyValuePair<Priority, T>> _firstUnbalancedNormalTask;
 		private const int NormalToHighRatio = 3;
@@ -17,7 +16,7 @@ namespace ThreadPool
 			{
 				//Low tasks always placed to end
 				case Priority.Low:
-					LinkedListNode<KeyValuePair<Priority, T>> newLowNode = _queue.AddLast(newTask);
+					LinkedListNode<KeyValuePair<Priority, T>> newLowNode = this.AddLast(newTask);
 
 					if (newLowNode.Previous == null || newLowNode.Previous.Value.Key != Priority.Low)
 						_firstLowTask = newLowNode;
@@ -28,11 +27,11 @@ namespace ThreadPool
 
 					if (_firstLowTask != null)
 					{
-						var newNode = _queue.AddBefore(_firstLowTask, newTask);
+						var newNode = this.AddBefore(_firstLowTask, newTask);
 						_firstUnbalancedNormalTask = _firstUnbalancedNormalTask ?? newNode;
 					}
 					else
-						_firstUnbalancedNormalTask = _queue.AddLast(newTask);
+						_firstUnbalancedNormalTask = this.AddLast(newTask);
 
 					break;
 
@@ -42,8 +41,8 @@ namespace ThreadPool
 
 					if (_firstUnbalancedNormalTask == null)
 					{
-						if (_firstLowTask == null) _queue.AddLast(newTask);
-						else _queue.AddBefore(_firstLowTask, newTask);
+						if (_firstLowTask == null) this.AddLast(newTask);
+						else this.AddBefore(_firstLowTask, newTask);
 					}
 					else
 					{
@@ -52,7 +51,7 @@ namespace ThreadPool
 							//block ends								  
 							_highTaskBlockLength = 1;
 							LinkedListNode<KeyValuePair<Priority,T>> newNode =
-								      _queue.AddAfter(_firstUnbalancedNormalTask,newTask);
+								      this.AddAfter(_firstUnbalancedNormalTask,newTask);
 
 							if (newNode.Next != null && newNode.Next.Value.Key == Priority.Normal)
 								_firstUnbalancedNormalTask = newNode.Next;
@@ -61,24 +60,23 @@ namespace ThreadPool
 						else
 						{
 							//block continues
-							_queue.AddBefore(_firstUnbalancedNormalTask,newTask);
+							this.AddBefore(_firstUnbalancedNormalTask,newTask);
 						}
 					}
 					break;
 			}
 		}
 
-		public bool TryDequeue(out KeyValuePair<Priority,T> item)
+		public KeyValuePair<Priority,T>  Dequeue()
 		{
-			item = new KeyValuePair<Priority, T>(Priority.Low,null);
-			LinkedListNode<KeyValuePair<Priority, T>> firstNode = _queue.First;
+			LinkedListNode<KeyValuePair<Priority, T>> firstNode = this.First;
 			if (firstNode != null)
 			{
-				_queue.RemoveFirst();
-				item = firstNode.Value;
-				return true;
+				this.RemoveFirst();
+				return firstNode.Value;
 			}
-			return false;
+
+			return new KeyValuePair<Priority, T>(Priority.Low, null);
 		}
 	}
 }
