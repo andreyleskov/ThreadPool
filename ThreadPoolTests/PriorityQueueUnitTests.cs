@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ThreadPoolExample;
+using ThreadPool;
 
 namespace ThreadPoolTests
 {
@@ -10,7 +10,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void MonoLowPriorityTasksTest()
 		{
-			var queue = new PriorityQueueList<object>();
+			var queue = new PriorityQueue<object>();
 			queue.Enqueue(Priority.Low, 1);
 			queue.Enqueue(Priority.Low, 2);
 			queue.Enqueue(Priority.Low, 3);
@@ -24,7 +24,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void MonoHighPriorityTasksTest()
 		{
-			var queue = new PriorityQueueList<object>();
+			var queue = new PriorityQueue<object>();
 			queue.Enqueue(Priority.High, 1);
 			queue.Enqueue(Priority.High, 2);
 			queue.Enqueue(Priority.High, 3);
@@ -38,7 +38,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void MonoNormalPriorityTasksTest()
 		{
-			var queue = new PriorityQueueList<object>();
+			var queue = new PriorityQueue<object>();
 			queue.Enqueue(Priority.Normal, 1);
 			queue.Enqueue(Priority.Normal, 2);
 			queue.Enqueue(Priority.Normal, 3);
@@ -52,7 +52,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void IncrementPrioritySequenceTest()
 		{
-			var queue = new PriorityQueueList<object>();
+			var queue = new PriorityQueue<object>();
 
 			queue.Enqueue(Priority.Low, 1);
 			queue.Enqueue(Priority.Low, 2);
@@ -74,7 +74,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void DecrementPrioritySequenceTest()
 		{
-			var queue = new PriorityQueueList<object>();
+			var queue = new PriorityQueue<object>();
 
 			queue.Enqueue(Priority.High, 1);
 			queue.Enqueue(Priority.High, 2);
@@ -96,7 +96,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void IncrementPrioritySequenceWithOverflowTest()
 		{
-			var queue = new PriorityQueueList<object>();
+			var queue = new PriorityQueue<object>();
 
 			queue.Enqueue(Priority.Low, 1);
 			queue.Enqueue(Priority.Low, 2);
@@ -122,7 +122,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void MixedPrioritySequenceTest()
 		{
-			var queue = new PriorityQueueList<object>();
+			var queue = new PriorityQueue<object>();
 
 			queue.Enqueue(Priority.Low,    1);
 			queue.Enqueue(Priority.Normal, 2);	
@@ -141,46 +141,63 @@ namespace ThreadPoolTests
 		}
 
 		[TestMethod]
-		public void MixedPrioritySequenceWithOverflowTest()
+		public void ShortOverflowTest()
 		{
-			var queue = new PriorityQueueList<object>();
+			var queue = new PriorityQueue<object>();
 
-			queue.Enqueue(Priority.Low, 1);
-			queue.Enqueue(Priority.Normal, 2);
+			queue.Enqueue(Priority.Normal, 1);
+			queue.Enqueue(Priority.High, 2);
 			queue.Enqueue(Priority.High, 3);
-			queue.Enqueue(Priority.Low, 4);
+			queue.Enqueue(Priority.High, 4);
+
+			Assert.AreEqual(2, queue.Dequeue()); //high
+			Assert.AreEqual(3, queue.Dequeue()); //high
+			Assert.AreEqual(4, queue.Dequeue()); //high
+			Assert.AreEqual(1, queue.Dequeue()); //normal
+		}
+
+		[TestMethod]
+		public void SimpleHighAndNormalOverflowTest()
+		{
+			var queue = new PriorityQueue<object>();
+										   
+			queue.Enqueue(Priority.High, 1);
+			queue.Enqueue(Priority.High, 2);
+			queue.Enqueue(Priority.Normal, 3);
+			queue.Enqueue(Priority.High, 4);
 			queue.Enqueue(Priority.High, 5);
 			queue.Enqueue(Priority.High, 6);
-			queue.Enqueue(Priority.Normal, 7);
-			queue.Enqueue(Priority.High, 8);
-			queue.Enqueue(Priority.High, 9);
-			queue.Enqueue(Priority.High, 10);
-			queue.Enqueue(Priority.Low, 12);
-			queue.Enqueue(Priority.Normal, 13);
-			queue.Enqueue(Priority.Low, 14);
-			queue.Enqueue(Priority.Normal, 2);
+			queue.Enqueue(Priority.High, 7);
 
-
-			Assert.AreEqual(3, queue.Dequeue());
-			Assert.AreEqual(5, queue.Dequeue());
-			Assert.AreEqual(6, queue.Dequeue());
-			Assert.AreEqual(2, queue.Dequeue());
-			Assert.AreEqual(8, queue.Dequeue());
-			Assert.AreEqual(9, queue.Dequeue());
-			Assert.AreEqual(10, queue.Dequeue());
-			Assert.AreEqual(7, queue.Dequeue());
-			Assert.AreEqual(13, queue.Dequeue());
-			Assert.AreEqual(2, queue.Dequeue());
-			Assert.AreEqual(1, queue.Dequeue());
-			Assert.AreEqual(4, queue.Dequeue());
-			Assert.AreEqual(12, queue.Dequeue());
-			Assert.AreEqual(14, queue.Dequeue());
+			Assert.AreEqual(1, queue.Dequeue()); //high
+			Assert.AreEqual(2, queue.Dequeue()); //high
+			Assert.AreEqual(4, queue.Dequeue()); //high
+			Assert.AreEqual(5, queue.Dequeue()); //normal
+			Assert.AreEqual(6, queue.Dequeue()); //high
+			Assert.AreEqual(3, queue.Dequeue()); //high
+			Assert.AreEqual(7, queue.Dequeue()); //high
 		}
+		[TestMethod]
+		public void SimpleHighAndLowTest()
+		{
+			var queue = new PriorityQueue<object>();
+
+			queue.Enqueue(Priority.High, 1);
+			queue.Enqueue(Priority.High, 2);
+			queue.Enqueue(Priority.Low, 3);
+			queue.Enqueue(Priority.High, 4);
+
+			Assert.AreEqual(1, queue.Dequeue()); //high
+			Assert.AreEqual(2, queue.Dequeue()); //high
+			Assert.AreEqual(4, queue.Dequeue()); //high
+			Assert.AreEqual(3, queue.Dequeue()); //normal
+		}
+
 
 		[TestMethod]
 		public void MixedPrioritySequenceWithDoubleOverflowTest()
 		{
-			var queue = new PriorityQueueList<object>(); 
+			var queue = new PriorityQueue<object>();
 
 			queue.Enqueue(Priority.Low, 1);
 			queue.Enqueue(Priority.Normal, 2);
@@ -192,26 +209,27 @@ namespace ThreadPoolTests
 			queue.Enqueue(Priority.High, 8);
 			queue.Enqueue(Priority.High, 9);
 			queue.Enqueue(Priority.High, 10);
+			queue.Enqueue(Priority.Low, 11);
 			queue.Enqueue(Priority.Low, 12);
 			queue.Enqueue(Priority.Normal, 13);
-			queue.Enqueue(Priority.Low, 14);
-			queue.Enqueue(Priority.Normal, 2);
+			queue.Enqueue(Priority.High, 14);
+			queue.Enqueue(Priority.Low, 15);
 
-
-			Assert.AreEqual(3, queue.Dequeue());
-			Assert.AreEqual(5, queue.Dequeue());
-			Assert.AreEqual(6, queue.Dequeue());
-			Assert.AreEqual(2, queue.Dequeue());
-			Assert.AreEqual(8, queue.Dequeue());
-			Assert.AreEqual(9, queue.Dequeue());
-			Assert.AreEqual(10, queue.Dequeue());
-			Assert.AreEqual(7, queue.Dequeue());
-			Assert.AreEqual(13, queue.Dequeue());
-			Assert.AreEqual(2, queue.Dequeue());
-			Assert.AreEqual(1, queue.Dequeue());
-			Assert.AreEqual(4, queue.Dequeue());
-			Assert.AreEqual(12, queue.Dequeue());
-			Assert.AreEqual(14, queue.Dequeue());
+			Assert.AreEqual(3, queue.Dequeue()); //high
+			Assert.AreEqual(5, queue.Dequeue()); //high
+			Assert.AreEqual(6, queue.Dequeue()); //high
+			Assert.AreEqual(2, queue.Dequeue()); //normal
+			Assert.AreEqual(8, queue.Dequeue()); //high
+			Assert.AreEqual(9, queue.Dequeue()); //high
+			Assert.AreEqual(10, queue.Dequeue());//high
+			Assert.AreEqual(7, queue.Dequeue()); //normal
+			Assert.AreEqual(14, queue.Dequeue());//high
+			Assert.AreEqual(13, queue.Dequeue());//normal
+			Assert.AreEqual(1, queue.Dequeue()); //low
+			Assert.AreEqual(4, queue.Dequeue()); //low
+			Assert.AreEqual(11, queue.Dequeue());//low
+			Assert.AreEqual(12, queue.Dequeue());//low
+			Assert.AreEqual(15, queue.Dequeue());//low
 		}
 	}
 }

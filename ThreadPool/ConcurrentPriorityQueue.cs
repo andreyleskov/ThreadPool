@@ -11,9 +11,8 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using ThreadPool;
 
-namespace ThreadPoolExample
+namespace ThreadPool
 {
     /// <summary>Provides a thread-safe priority queue data structure.</summary>
     /// <typeparam name="T">Specifies the type of elements in the queue.</typeparam>
@@ -21,7 +20,7 @@ namespace ThreadPoolExample
     public class ConcurrentPriorityQueue<T> : IProducerConsumerCollection<KeyValuePair<Priority,T>> where T:class 
     {
         private readonly object _syncLock = new object();
-        private readonly PriorityQueueList<T> _queueList = new PriorityQueueList<T>();
+        private readonly PriorityQueue<T> _queue = new PriorityQueue<T>();
 
 
 		#region IProducerConsumerCollection<KeyValuePair<Priority,T>> Members

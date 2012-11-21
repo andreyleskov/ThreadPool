@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using Task = ThreadPoolExample.Task;
+using Task = ThreadPool.Task;
 
 namespace ThreadPool
 {

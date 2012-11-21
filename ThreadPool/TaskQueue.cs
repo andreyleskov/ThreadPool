@@ -4,17 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using ThreadPoolExample;
 
 
 namespace ThreadPool
 {
-    public struct PriorityTask
-    {
-	    public Priority Priority;
-	    public Task Task;
-    }
-
 	//will block execution on Dequeue()
 	public class TaskQueue: IProducerConsumerCollection<PriorityTask>
 	{

@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using ThreadPool;
 
-namespace ThreadPoolExample
+namespace ThreadPool
 {
 //* До вызова метода stop() задачи ставятся в очередь на выполнение и
 //метод boolean execute(Task task, Priority priority) сразу же возвращает true,

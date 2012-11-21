@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ThreadPoolExample;
+﻿using System.Collections.Generic;
 
-namespace ThreadPoolExample
+namespace ThreadPool
 {
-	public class PriorityQueueList<T> where T:class
+	public class PriorityQueue<T> where T:class
 	{
 		private readonly LinkedList<KeyValuePair<Priority, T>> _queue = new LinkedList<KeyValuePair<Priority, T>>();
 		private LinkedListNode<KeyValuePair<Priority, T>> _firstLowTask;
@@ -22,11 +17,10 @@ namespace ThreadPoolExample
 			{
 				//Low tasks always placed to end
 				case Priority.Low:
+					LinkedListNode<KeyValuePair<Priority, T>> newLowNode = _queue.AddLast(newTask);
 
-					if (_queue.Last == null  || (_queue.Last != null && _queue.Last.Value.Key != Priority.Low))
-						_firstLowTask =  _queue.AddLast(newTask);
-					else
-						_queue.AddLast(newTask);
+					if (newLowNode.Previous == null || newLowNode.Previous.Value.Key != Priority.Low)
+						_firstLowTask = newLowNode;
 
 					break;
 				//Normal tasks placed before low ones
@@ -48,19 +42,21 @@ namespace ThreadPoolExample
 
 					if (_firstUnbalancedNormalTask == null)
 					{
-						var newNode = _firstLowTask == null ? _queue.AddLast(newTask) : _queue.AddBefore(_firstLowTask, newTask);
+						if (_firstLowTask == null) _queue.AddLast(newTask);
+						else _queue.AddBefore(_firstLowTask, newTask);
 					}
 					else
 					{
-						if (_highTaskBlockLength++ == NormalToHighRatio)
+						if (_highTaskBlockLength ++ == NormalToHighRatio)
 						{
-							//block ends
-							_highTaskBlockLength = 0;
-							_queue.AddAfter(_firstUnbalancedNormalTask,newTask);
+							//block ends								  
+							_highTaskBlockLength = 1;
+							LinkedListNode<KeyValuePair<Priority,T>> newNode =
+								      _queue.AddAfter(_firstUnbalancedNormalTask,newTask);
 
-							_firstUnbalancedNormalTask = _firstUnbalancedNormalTask.Next != null
-									                            ? _firstUnbalancedNormalTask.Next.Next
-									                            : null;
+							if (newNode.Next != null && newNode.Next.Value.Key == Priority.Normal)
+								_firstUnbalancedNormalTask = newNode.Next;
+							else _firstUnbalancedNormalTask = null;
 						}
 						else
 						{

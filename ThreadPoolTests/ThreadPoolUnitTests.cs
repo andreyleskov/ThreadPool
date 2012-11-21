@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ThreadPoolExample;
+using ThreadPool;
 
 namespace ThreadPoolTests
 {
@@ -13,7 +13,7 @@ namespace ThreadPoolTests
 		
 		public void TasksConsistencyTest(int threadCount,int taskCount,Func<Action> taskPayloadProvider)
 		{
-			var pool = new ThreadPoolExample.ThreadPool(threadCount);
+			var pool = new ThreadPool.ThreadPool(threadCount);
 			var random = new Random();
 			int completedTasksCount = 0;
 
@@ -65,7 +65,7 @@ namespace ThreadPoolTests
 		[TestMethod]
 		public void TasksPriorityTest()
 		{
-			var pool = new ThreadPoolExample.ThreadPool(2);
+			var pool = new ThreadPool.ThreadPool(2);
 			var random = new Random();
 			var priorityChecker = new PrioritySequenceChecker();
 
