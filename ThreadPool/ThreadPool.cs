@@ -14,12 +14,15 @@ namespace ThreadPool
 	public class ThreadPool
 	{
 		private readonly int _maxThreadNum;
-		private volatile bool _isRunning = true;
-
+		private readonly object _locker = new object();
 		private readonly List<ThreadWorker<Priority, Task>> _threadWorkerList = new List<ThreadWorker<Priority, Task>>();
-		private int _threadCounter;
+		
 		private readonly BlockingCollection<KeyValuePair<Priority, Task>> _queue 
 			= new BlockingCollection<KeyValuePair<Priority, Task>>(new ConcurrentPriorityQueue<Task>());
+
+		private int _threadCounter;
+		private bool _isRunning = true;
+		private bool _canCreateNewThreads = true;
 
 		//* В конструктор этого класса должно передаваться количество потоков, которые будут выполнять задачи.
 
@@ -36,8 +39,7 @@ namespace ThreadPool
 			return worker;
 		}
 
-		private volatile bool _canCreateNewThreads = true;
-	    private readonly object _locker = new object(); 
+		 
 
 		public bool Execute(Task task, Priority priority)
 		{
